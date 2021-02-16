@@ -1,0 +1,12 @@
+{
+  "name": "style-scraper",
+  "version": "1.0.0",
+  "description": "Get styles and assets from url to make an email template",
+  "main": "index.js",
+  "author": "Daniel Elihu Munguía Cruz <z16th@pm.me>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "puppeteer": "^7.1.0"
+  }
+}
