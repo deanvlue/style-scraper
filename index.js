@@ -1,47 +1,31 @@
-const puppeteer = require("puppeteer");
-fs = require("fs");
+const express = require("express");
+const app = express();
 
-async function scrape(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url);
+const cors = require("cors");
 
-  const styles = await page.evaluate(() => {
-    const elements = document.body.getElementsByTagName("*");
+const PORT = process.env.PORT || "8080";
 
-    const images = Array.from(document.images, (e) => e.src);
+const getStyles = require("./functions/scrape-url");
 
-    const styles = {
-      fonts: [],
-      colors: [],
-      backgroundColors: [],
-      fillColors: [],
-      borderColors: [],
-    };
+const options = { origin: "*" };
 
-    [...elements].forEach((element) => {
-      element.focus();
-      const css = window.getComputedStyle(element);
+app.use(express.json());
+app.use(cors(options));
 
-      styles.fonts.push(css.getPropertyValue("font-family"));
-      styles.colors.push(css.getPropertyValue("color"));
-      styles.backgroundColors.push(css.getPropertyValue("background-color"));
-      styles.fillColors.push(css.getPropertyValue("fill"));
-      styles.borderColors.push(css.getPropertyValue("border-color"));
-    });
+app.listen(PORT, () => console.log(`Alive on localhost:${PORT}`));
 
-    return { styles, images };
+app.post("/get-style-from-url", async (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    res.status(418).send({ message: "No URL found" });
+  }
+
+  const styles = await getStyles(url);
+
+  res.send({
+    data: {
+      ...styles,
+    },
+    message: `Your url: ${url}`,
   });
-
-  console.log("WRITING TO styles.txt");
-  fs.writeFile("styles.json", JSON.stringify(styles), (e) => {
-    if (e) throw e;
-    console.log("Output written to styles.json file");
-  });
-
-  await browser.close();
-}
-
-const cirkul = "https://drinkcirkul.com/";
-const aldhair = "https://aldhairescobar.com/";
-scrape(aldhair);
+});

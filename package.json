@@ -6,7 +6,15 @@
   "author": "Daniel Elihu Munguía Cruz <z16th@pm.me>",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "puppeteer": "^7.1.0"
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "puppeteer": "^8.0.0"
+  },
+  "engines": {
+    "node": "15.8.0"
   }
 }
