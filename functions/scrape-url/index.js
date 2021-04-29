@@ -28,6 +28,8 @@ async function scrapeUrl(url) {
       const currentHost = window.location.host;
       const fontFaceRegex = /\@font\-face\s?\{([\s\S]+?)\}/gm;
       const fontFamilyRegex = /font\-family\:\s?(.*)/;
+      const fontWeightRegex = /font\-weight\:\s?(.*)/;
+      const fontStyleRegex = /font\-style\:\s?(.*)/;
       const urlRegex = /url\(['"]?(.+?)['"]?\)/g;
 
       const matches = css.matchAll(fontFaceRegex);
@@ -49,30 +51,48 @@ async function scrapeUrl(url) {
 
         // Find the font-family rule:
         const familyLine = lines.find((line) => fontFamilyRegex.test(line));
+        const weightLine = lines.find((line) => fontWeightRegex.test(line));
+        const styleLine = lines.find((line) => fontStyleRegex.test(line));
 
         if (!familyLine) {
           continue;
         }
 
         const family = familyLine.match(fontFamilyRegex)[1];
+        let weight = weightLine ? weightLine.match(fontWeightRegex)[1] : 400;
+        const style = styleLine ? styleLine.match(fontStyleRegex)[1] : "Normal";
+
+        // A single weight rule can have multiple weights. We just take the 1st for simplicity
+        const trimmedWeight = weight.split(" ")[0];
+
+        const key = `${family} ${style} ${trimmedWeight}`;
 
         const familyUrls = [];
 
         // Extract the URLs from the raw lines
         for (const line of lines) {
           const urlMatches = line.matchAll(urlRegex);
+
           if (!urlMatches) {
             continue;
           }
+
           for (const urlMatch of urlMatches) {
             let rawUrl = urlMatch[1];
+
             // Add a host if one isn't specified
             const absoluteUrl = new URL(rawUrl, document.baseURI).href;
+
             familyUrls.push(absoluteUrl);
           }
         }
 
-        results[family] = familyUrls;
+        results[key] = {
+          urls: familyUrls,
+          family,
+          style,
+          weight: trimmedWeight,
+        };
       }
 
       return results;
